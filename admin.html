@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Course Reservation System</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div class="mobile-topbar">
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <div class="brand"><span class="mark">CR</span> Course Reservations</div>
+</div>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand"><span class="mark">CR</span> Course Reservations</div>
+    <span class="role-tag">Admin</span>
+    <nav>
+      <button class="nav-btn active" data-section="reservations">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Reservations
+      </button>
+      <button class="nav-btn" data-section="departments">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
+        Departments
+      </button>
+      <button class="nav-btn" data-section="buildings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="1"/><path d="M9 22v-4h6v4M8 6h1M8 10h1M8 14h1M15 6h1M15 10h1M15 14h1"/></svg>
+        Buildings
+      </button>
+      <button class="nav-btn" data-section="rooms">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Rooms
+      </button>
+      <button class="nav-btn" data-section="courses">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Courses
+      </button>
+      <button class="nav-btn" data-section="accounts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Accounts
+        <span class="stamp pending" id="reqBadge" style="display:none; margin-left:auto; transform:none; padding:2px 6px;"></span>
+      </button>
+    </nav>
+    <div class="exit"><a href="#" id="logoutLink">&larr; Logout</a></div>
+  </aside>
+
+  <main class="main">
+
+    <!-- Reservations -->
+    <section id="section-reservations" class="section-panel">
+      <div class="page-header">
+        <div>
+          <span class="eyebrow">Approvals</span>
+          <h1>Reservation requests</h1>
+          <p>Review pending requests, then accept or reject. Accepted courses appear in the trainee's Learning List.</p>
+        </div>
+      </div>
+      <div class="tab-strip" id="resTabStrip">
+        <button class="active" data-status="pending">Pending</button>
+        <button data-status="accepted">Accepted</button>
+        <button data-status="rejected">Rejected</button>
+        <button data-status="">All</button>
+      </div>
+      <div class="panel"><div id="reservationsWrap"></div></div>
+    </section>
+
+    <!-- Departments -->
+    <section id="section-departments" class="section-panel hidden">
+      <div class="page-header">
+        <div>
+          <span class="eyebrow">Setup</span>
+          <h1>Departments</h1>
+          <p>The academic or business units courses belong to.</p>
+        </div>
+        <button class="btn btn-gold" onclick="openDeptForm()">+ Add department</button>
+      </div>
+      <div class="panel"><div id="departmentsWrap"></div></div>
+    </section>
+
+    <!-- Buildings -->
+    <section id="section-buildings" class="section-panel hidden">
+      <div class="page-header">
+        <div>
+          <span class="eyebrow">Setup</span>
+          <h1>Buildings</h1>
+          <p>Physical locations that contain rooms.</p>
+        </div>
+        <button class="btn btn-gold" onclick="openBuildingForm()">+ Add building</button>
+      </div>
+      <div class="panel"><div id="buildingsWrap"></div></div>
+    </section>
+
+    <!-- Rooms -->
+    <section id="section-rooms" class="section-panel hidden">
+      <div class="page-header">
+        <div>
+          <span class="eyebrow">Setup</span>
+          <h1>Rooms</h1>
+          <p>Bookable spaces inside each building, with an optional capacity.</p>
+        </div>
+        <button class="btn btn-gold" onclick="openRoomForm()">+ Add room</button>
+      </div>
+      <div class="panel"><div id="roomsWrap"></div></div>
+    </section>
+
+    <!-- Courses -->
+    <section id="section-courses" class="section-panel hidden">
+      <div class="page-header">
+        <div>
+          <span class="eyebrow">Catalog</span>
+          <h1>Courses</h1>
+          <p>What trainees see and reserve from the user dashboard.</p>
+        </div>
+        <button class="btn btn-gold" onclick="openCourseForm()">+ Add course</button>
+      </div>
+      <div class="panel"><div id="coursesWrap"></div></div>
+    </section>
+
+    <!-- Accounts -->
+    <section id="section-accounts" class="section-panel hidden">
+      <div class="page-header">
+        <div>
+          <span class="eyebrow">Access</span>
+          <h1>Student accounts</h1>
+          <p>Review incoming account requests, then create login credentials for students.</p>
+        </div>
+        <button class="btn btn-gold" onclick="openStudentForm()">+ Add student</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <h2>Pending requests</h2>
+          <span class="muted" id="reqCountLabel"></span>
+        </div>
+        <div id="accountRequestsWrap"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title"><h2>All students</h2></div>
+        <div id="studentsWrap"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/admin.js"></script>
+</body>
+</html>

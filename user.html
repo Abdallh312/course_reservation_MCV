@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Dashboard — Course Reservation System</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div class="mobile-topbar">
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <div class="brand"><span class="mark">CR</span> Course Reservations</div>
+</div>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand"><span class="mark">CR</span> Course Reservations</div>
+    <span class="role-tag" id="currentUserTag">User</span>
+    <nav>
+      <button class="nav-btn active" data-section="browse">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Browse Courses
+      </button>
+      <button class="nav-btn" data-section="learning">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        My Learning List
+      </button>
+    </nav>
+    <div class="exit"><a href="#" id="logoutLink">&larr; Logout</a></div>
+  </aside>
+
+  <main class="main">
+
+    <!-- Browse Courses -->
+    <section id="section-browse" class="section-panel">
+      <div class="page-header">
+        <div>
+          <span class="eyebrow">Catalog</span>
+          <h1>Browse courses</h1>
+          <p>Filter by department, then reserve a seat. Requests stay pending until an admin reviews them.</p>
+        </div>
+        <div class="field" style="min-width:220px; margin-bottom:0;">
+          <label for="deptFilter">Department</label>
+          <select id="deptFilter" class="form-control">
+            <option value="">All departments</option>
+          </select>
+        </div>
+      </div>
+      <div id="courseGrid" class="course-grid"></div>
+    </section>
+
+    <!-- My Learning List -->
+    <section id="section-learning" class="section-panel hidden">
+      <div class="page-header">
+        <div>
+          <span class="eyebrow">Your reservations</span>
+          <h1>My Learning List</h1>
+          <p>Every course you've requested, with its current status.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div id="learningListWrap"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/user.js"></script>
+</body>
+</html>

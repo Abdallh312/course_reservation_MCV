@@ -1,0 +1,17 @@
+# .NET build outputs
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+.vs/
+.vscode/
