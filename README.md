@@ -1,77 +1,51 @@
-# Course Reservation System — Frontend
+# Course Reservation System (Full-Stack MVC / Web API)
 
-A standalone HTML/CSS/JS (Bootstrap-ready) frontend for the Course Reservation
-System described in the project documentation. It runs fully in the browser
-with a localStorage-backed data layer that starts **empty** — no demo
-departments, buildings, rooms, courses or reservations are pre-loaded. Add
-your own data through the Admin dashboard, or connect the real .NET API (see
-below).
+A full-stack Course Reservation System featuring an HTML/CSS/JS frontend fully connected to a .NET 10 Web API backend with SQLite database persistence.
 
-## Open it
+## Single Link Application Access
 
-Just open `index.html` in a browser.
+The entire project is served from a single host endpoint link:
 
-> **Important:** data is saved with `localStorage`, which some browsers
-> (Firefox especially) treat as temporary/per-load when you open the file
-> directly with `file://` — so anything you add can disappear on refresh.
-> For reliable persistence while testing, serve the folder instead of
-> double-clicking the file:
->
-> ```bash
-> # from inside the course-reservation folder
-> npx serve .
-> # or
-> python3 -m http.server 8080
-> ```
->
-> Then open the printed `http://localhost:...` URL. This has no effect once
-> you connect the real .NET API — persistence will be handled by the
-> database instead.
+```bash
+# Navigate to the Backend folder and run
+cd Backend
+dotnet run --launch-profile http
+```
+
+Access the web app at: **`http://localhost:5205/`**
+
+---
+
+## Branches
+
+- `main` — Primary integrated branch containing both frontend & backend.
+- `frontend` — Dedicated branch for static frontend assets & client scripts.
+- `backend` — Dedicated branch for .NET Web API, EF Core models, and controllers.
+
+---
+
+## Team & Collaborators
+
+- **Abdallh312** (`abdallhshref4@gmail.com`)
+- **Karim Ahmed** (`karim2007ahmed@gmail.com`)
+- **Ahmed** (`AhmedAMD3x3` / `amd3x3@gmail.com`)
+
+---
+
+## Initial Test Accounts
+
+| Role | Username / Email | Password |
+|---|---|---|
+| Admin | `admin` / `admin@example.com` | `admin123` |
+| Student | `student` / `student@example.com` | `student123` |
+| Team Member | `karim2007ahmed@gmail.com` | `Karim123` |
+| Team Member | `amd3x3@gmail.com` | `Ahmed123` |
+
+---
 
 ## Pages
 
-- `index.html` — the login page (now the site's entry point; students and staff both sign in here)
-- `user.html` — trainee dashboard: browse courses (filter by department),
-  reserve a seat, view **My Learning List** with live status
-- `admin.html` — admin dashboard: manage **Departments**, **Buildings**,
-  **Rooms**, **Courses**, and **approve/reject** reservation requests
-
-## Structure
-
-```
-assets/
-  css/style.css     design system (tokens, layout, components)
-  js/data.js        seeded mock database + localStorage persistence
-  js/api.js         functions matching every documented endpoint
-  js/ui.js          toast, modal, formatting helpers
-  js/user.js        user dashboard logic
-  js/admin.js       admin dashboard logic
-```
-
-## Connecting the real .NET backend
-
-Every call the frontend makes lives in `assets/js/api.js` and is named after
-the documented endpoint (`getDepartments`, `createReservation`,
-`updateReservationStatus`, etc.). Each function already contains the
-`fetch(...)` call it needs — it's just gated behind a flag.
-
-1. Set `API_BASE_URL` at the top of `api.js` to your API's origin, e.g.
-   `https://localhost:5001/api`.
-2. Set `USE_MOCK = false`.
-3. Make sure your API's response shapes match the data models in the docs
-   (`Department`, `Building`, `Room`, `Course`, `Reservation`, `User`).
-4. If you add authentication, replace `CURRENT_USER_ID` in `data.js` with the
-   logged-in user's id from your auth flow.
-
-No other file needs to change — `user.js` and `admin.js` only ever talk to
-the `API` object.
-
-## Notes
-
-- There's no login screen yet (per the docs, auth is optional) — the app
-  assumes a single generic trainee account (`User`, id `1`) and an implicit
-  admin. Rename or replace it in `assets/js/data.js` once real auth is wired up.
-- Deleting a department/building/room doesn't cascade-update courses that
-  reference it; wire that up server-side once the real API is in place.
-- All pages are responsive down to mobile (sidebar collapses to a horizontal
-  bar under ~900px).
+- `index.html` — Site landing and sign-in entry point.
+- `login.html` — Login page.
+- `user.html` — Trainee dashboard: browse courses, filter by department, reserve seats, and view live status.
+- `admin.html` — Admin dashboard: manage departments, buildings, rooms, courses, student accounts, and reservation approvals.

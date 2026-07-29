@@ -73,6 +73,22 @@ namespace Backend.Data
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword("student123"),
                         Role = "Student",
                         Status = "Approved"
+                    },
+                    new User
+                    {
+                        Name = "Karim Ahmed",
+                        Email = "karim2007ahmed@gmail.com",
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("Karim123"),
+                        Role = "Student",
+                        Status = "Approved"
+                    },
+                    new User
+                    {
+                        Name = "Ahmed (AhmedAMD3x3)",
+                        Email = "amd3x3@gmail.com",
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("Ahmed123"),
+                        Role = "Student",
+                        Status = "Approved"
                     }
                 };
 
