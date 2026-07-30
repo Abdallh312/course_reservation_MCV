@@ -8,27 +8,42 @@
 const DB_KEY = "crs_db_v2";
 
 const SEED = {
-  departments: [],
-  buildings: [],
-  rooms: [],
-  courses: [],
-  // Single generic demo user, with a demo password just like the admin account
-  // below (username "admin" / password "admin123"). "password" is stored only
-  // for this local mock; a real backend should hash it.
+  departments: [
+    { id: 1, name: "Computer Science", description: "Software Engineering, AI, and Web Development" },
+    { id: 2, name: "Business Administration", description: "Management, Finance, and Marketing" },
+    { id: 3, name: "Information Technology", description: "Networking, Cybersecurity, and IT Infrastructure" }
+  ],
+  buildings: [
+    { id: 1, name: "Main Campus Building A", address: "123 Tech Avenue" },
+    { id: 2, name: "Science Hall B", address: "456 University Boulevard" }
+  ],
+  rooms: [
+    { id: 1, name: "Room 101", buildingId: 1, capacity: 35 },
+    { id: 2, name: "Lab 204 (Computer Lab)", buildingId: 1, capacity: 25 },
+    { id: 3, name: "Auditorium Hall 1", buildingId: 2, capacity: 120 }
+  ],
+  courses: [
+    {
+      id: 1,
+      title: "ASP.NET Core Web API",
+      description: "Comprehensive course on REST APIs",
+      departmentId: 1,
+      buildingId: 1,
+      roomId: 1,
+      date: new Date(Date.now() + 7 * 86400000).toISOString()
+    }
+  ],
   users: [
-    { id: 1, name: "student", email: "student@example.com", password: "student123" }
+    { id: 1, name: "student", email: "student@example.com", password: "student123", role: "Student", status: "Approved" },
+    { id: 2, name: "Karim Ahmed", email: "karim2007ahmed@gmail.com", password: "Karim123", role: "Student", status: "Approved" },
+    { id: 3, name: "Ahmed (AhmedAMD3x3)", email: "amd3x3@gmail.com", password: "Ahmed123", role: "Student", status: "Approved" }
   ],
-  // Staff / admin accounts, checked by login.js. Demo credentials:
-  // username "admin", password "admin123".
   admins: [
-    { id: 1, name: "Admin", username: "admin", password: "admin123" }
+    { id: 1, name: "Admin", username: "admin", email: "admin@example.com", password: "admin123", role: "Admin" }
   ],
-  // Requests submitted from the "Request account" button on the landing page.
-  // An admin reviews these in Admin → Accounts and turns approved ones into
-  // real student credentials via API.createUser.
   accountRequests: [],
   reservations: [],
-  _nextId: { departments: 1, buildings: 1, rooms: 1, courses: 1, users: 2, reservations: 1, accountRequests: 1 }
+  _nextId: { departments: 4, buildings: 3, rooms: 4, courses: 2, users: 4, reservations: 1, accountRequests: 1 }
 };
 
 // In-memory fallback used only if localStorage is unavailable/blocked
@@ -49,25 +64,52 @@ function loadDB() {
       return fresh;
     }
     const db = JSON.parse(raw);
-    // Migration: older saved DBs (from before staff accounts existed) won't
-    // have an "admins" table yet — add the default one so login still works.
-    if (!db.admins) {
+    let changed = false;
+
+    if (!db.admins || !db.admins.length) {
       db.admins = cloneSeed().admins;
-      localStorage.setItem(DB_KEY, JSON.stringify(db));
+      changed = true;
     }
-    // Migration: older saved DBs may still have the original blank-password
-    // demo student (id 1, no email/password) — upgrade it to the new demo
-    // credentials so the "student / student123" login still works.
+    if (!db.departments || !db.departments.length) {
+      db.departments = cloneSeed().departments;
+      changed = true;
+    }
+    if (!db.buildings || !db.buildings.length) {
+      db.buildings = cloneSeed().buildings;
+      changed = true;
+    }
+    if (!db.rooms || !db.rooms.length) {
+      db.rooms = cloneSeed().rooms;
+      changed = true;
+    }
+    if (!db.courses || !db.courses.length) {
+      db.courses = cloneSeed().courses;
+      changed = true;
+    }
+    if (!db.users || !db.users.length) {
+      db.users = cloneSeed().users;
+      changed = true;
+    }
+    if (!db._nextId) {
+      db._nextId = cloneSeed()._nextId;
+      changed = true;
+    }
+
     const demoStudent = db.users && db.users.find(u => u.id === 1);
     if (demoStudent && !demoStudent.password && !demoStudent.email) {
       demoStudent.name = "student";
       demoStudent.email = "student@example.com";
       demoStudent.password = "student123";
+      demoStudent.role = "Student";
+      demoStudent.status = "Approved";
+      changed = true;
+    }
+
+    if (changed) {
       localStorage.setItem(DB_KEY, JSON.stringify(db));
     }
     return db;
   } catch (e) {
-    // localStorage not available/blocked — keep data in memory for this tab only
     if (!_memoryDB) _memoryDB = cloneSeed();
     return _memoryDB;
   }
