@@ -149,11 +149,14 @@
     <section id="section-courses" class="section-panel hidden">
       <div class="page-header">
         <div>
-          <span class="eyebrow">Course Schedule</span>
+          <span class="eyebrow">Course Schedule &amp; Capacity</span>
           <h1>Courses</h1>
-          <p>Create and manage courses published to the student catalog.</p>
+          <p>Create courses, monitor seat limits, and enroll students directly.</p>
         </div>
-        <button class="btn btn-gold" onclick="openCourseForm()">+ Add course</button>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-outline" onclick="openEnrollStudentModal()">🎓 Enroll Student</button>
+          <button class="btn btn-gold" onclick="openCourseForm()">+ Add course</button>
+        </div>
       </div>
       <div class="panel"><div id="coursesWrap"></div></div>
     </section>

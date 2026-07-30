@@ -194,7 +194,12 @@ function mockApiHandler(endpoint, options = {}) {
 
   // GET /courses
   if (endpoint === "/courses" && method === "GET") {
-    return db.courses || [];
+    const courses = db.courses || [];
+    return courses.map(c => ({
+      ...c,
+      capacity: c.capacity || 30,
+      enrolledCount: (db.reservations || []).filter(r => r.courseId === c.id && (r.status === "accepted" || r.status === "pending")).length
+    }));
   }
   // POST /courses
   if (endpoint === "/courses" && method === "POST") {
@@ -205,6 +210,7 @@ function mockApiHandler(endpoint, options = {}) {
       departmentId: Number(body.departmentId),
       buildingId: Number(body.buildingId),
       roomId: Number(body.roomId),
+      capacity: Number(body.capacity || 30),
       date: body.date || new Date().toISOString()
     };
     db.courses.push(item);
@@ -217,6 +223,7 @@ function mockApiHandler(endpoint, options = {}) {
     const item = db.courses.find(c => c.id === id);
     if (item) {
       Object.assign(item, body);
+      if (body.capacity) item.capacity = Number(body.capacity);
       saveDB(db);
       return item;
     }
@@ -232,11 +239,20 @@ function mockApiHandler(endpoint, options = {}) {
 
   // POST /reservations
   if (endpoint === "/reservations" && method === "POST") {
+    const courseId = Number(body.courseId);
+    const course = (db.courses || []).find(c => c.id === courseId);
+    const activeCount = (db.reservations || []).filter(r => r.courseId === courseId && (r.status === "accepted" || r.status === "pending")).length;
+    const capacity = course ? (course.capacity || 30) : 30;
+
+    if (capacity > 0 && activeCount >= capacity) {
+      throw new Error(`This course is full (${activeCount}/${capacity} seats filled).`);
+    }
+
     const item = {
       id: nextId(db, "reservations"),
       userId: Number(body.userId),
-      courseId: Number(body.courseId),
-      status: "pending",
+      courseId: courseId,
+      status: body.status || "pending",
       requestDate: new Date().toISOString()
     };
     db.reservations.push(item);
@@ -264,6 +280,13 @@ function mockApiHandler(endpoint, options = {}) {
       saveDB(db);
       return item;
     }
+    return { ok: true };
+  }
+  // DELETE /reservations/:id
+  if (endpoint.startsWith("/reservations/") && method === "DELETE") {
+    const id = Number(endpoint.split("/")[2]);
+    db.reservations = (db.reservations || []).filter(r => r.id !== id);
+    saveDB(db);
     return { ok: true };
   }
   // GET /users/:userId/reservations
@@ -492,6 +515,11 @@ const API = {
     return await request(`/reservations/${id}/status`, {
       method: "PUT",
       body: JSON.stringify({ status })
+    });
+  },
+  async deleteReservation(id) {
+    return await request(`/reservations/${id}`, {
+      method: "DELETE"
     });
   },
   async getUserReservations(userId) {

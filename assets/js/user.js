@@ -37,11 +37,11 @@ async function init() {
   initSidebarToggle();
   const currentUserId = getCurrentUserId();
   try {
-    const [departments, buildings, rooms, courses, reservations, users] = await Promise.all([
+    const [departments, buildings, rooms, courses, userReservations, users, allReservations] = await Promise.all([
       API.getDepartments(), API.getBuildings(), API.getRooms(), API.getCourses(),
-      API.getUserReservations(currentUserId), API.getUsers()
+      API.getUserReservations(currentUserId), API.getUsers(), API.getReservations()
     ]);
-    STATE = { departments, buildings, rooms, courses, reservations, users };
+    STATE = { departments, buildings, rooms, courses, reservations: userReservations || [], users, allReservations: allReservations || [] };
 
     const me = (users || []).find(u => u.id === currentUserId || u.Id === currentUserId);
     const userTag = document.getElementById("currentUserTag");
@@ -117,15 +117,24 @@ function renderCourses() {
     const room = STATE.rooms.find(r => r.id === c.roomId);
     const existing = myReservationFor(c.id);
 
+    const capacity = c.capacity || c.Capacity || 30;
+    const activeCount = c.enrolledCount !== undefined ? c.enrolledCount :
+      (STATE.allReservations || []).filter(r => (r.courseId === c.id || r.CourseId === c.id) && (r.status === "accepted" || r.status === "pending" || r.status === "approved")).length;
+    const isFull = activeCount >= capacity;
+
     let actionHtml;
-    if (!existing) {
-      actionHtml = `<button class="btn btn-gold btn-sm" onclick="reserveCourse(${c.id})">Reserve seat</button>`;
-    } else if (existing.status === "pending") {
-      actionHtml = statusStamp("pending");
-    } else if (existing.status === "accepted" || existing.status === "approved") {
-      actionHtml = statusStamp("accepted");
+    if (existing) {
+      if (existing.status === "pending") {
+        actionHtml = statusStamp("pending");
+      } else if (existing.status === "accepted" || existing.status === "approved") {
+        actionHtml = statusStamp("accepted");
+      } else {
+        actionHtml = statusStamp("rejected");
+      }
+    } else if (isFull) {
+      actionHtml = `<button class="btn btn-outline btn-sm" disabled style="opacity:0.75; cursor:not-allowed; border-color:#EF4444; color:#F87171; background:rgba(239,68,68,0.1);">Course Full</button>`;
     } else {
-      actionHtml = statusStamp("rejected");
+      actionHtml = `<button class="btn btn-gold btn-sm" onclick="reserveCourse(${c.id})">Reserve seat</button>`;
     }
 
     return `
@@ -137,6 +146,7 @@ function renderCourses() {
           <div class="meta">
             <span><b>Session Date:</b> ${fmtDate(c.date)}</span>
             <span><b>Location:</b> ${escapeHtml(building ? building.name : "Main Campus")} · ${escapeHtml(room ? room.name : "Room")}</span>
+            <span><b>Seats:</b> ${activeCount} / ${capacity} ${isFull ? '<span class="badge badge-rejected" style="margin-left:6px;">Course Full</span>' : '<span class="badge badge-approved" style="margin-left:6px; background:rgba(34,197,94,0.15); color:#4ADE80; border:1px solid rgba(34,197,94,0.3);">Open</span>'}</span>
           </div>
         </div>
         <div class="ticket-stub">

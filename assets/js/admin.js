@@ -133,6 +133,7 @@ function renderReservations() {
               <button class="btn btn-approve btn-sm" onclick="setResStatus(${r.id}, 'accepted')">Accept</button>
               <button class="btn btn-reject btn-sm" onclick="setResStatus(${r.id}, 'rejected')">Reject</button>
             ` : `<button class="btn btn-outline btn-sm" onclick="setResStatus(${r.id}, 'pending')">Reopen</button>`}
+            <button class="btn btn-reject btn-sm" onclick="deleteRes(${r.id})">Delete</button>
           </div>
         </td>
       </tr>
@@ -153,6 +154,14 @@ async function setResStatus(id, status) {
   if (r) r.status = status;
   renderReservations();
   toast(status === "accepted" ? "Reservation accepted." : status === "rejected" ? "Reservation rejected." : "Reservation reopened.");
+}
+
+async function deleteRes(id) {
+  confirmDelete("Delete this course reservation?", "This will remove the reservation completely.", async () => {
+    await API.deleteReservation(id);
+    await refreshAll();
+    toast("Reservation deleted.");
+  });
 }
 
 /* ============================================================
@@ -364,20 +373,31 @@ function renderCourses() {
   }
   wrap.innerHTML = `
     <table class="ledger">
-      <thead><tr><th>Title</th><th>Department</th><th>Location</th><th>Date</th><th></th></tr></thead>
+      <thead><tr><th>Title</th><th>Department</th><th>Location</th><th>Session Date</th><th>Seat Capacity</th><th></th></tr></thead>
       <tbody>
-        ${STATE.courses.map(c => `
-          <tr>
-            <td><b>${escapeHtml(c.title)}</b><div class="small-muted">${escapeHtml(c.description)}</div></td>
-            <td>${escapeHtml(nameOf(STATE.departments, c.departmentId))}</td>
-            <td>${escapeHtml(nameOf(STATE.buildings, c.buildingId))} · ${escapeHtml(nameOf(STATE.rooms, c.roomId))}</td>
-            <td>${fmtDate(c.date)}</td>
-            <td><div class="row-actions">
-              <button class="btn btn-outline btn-sm" onclick="openCourseForm(${c.id})">Edit</button>
-              <button class="btn btn-reject btn-sm" onclick="removeCourse(${c.id})">Delete</button>
-            </div></td>
-          </tr>
-        `).join("")}
+        ${STATE.courses.map(c => {
+          const cap = c.capacity || c.Capacity || 30;
+          const activeCount = c.enrolledCount !== undefined ? c.enrolledCount :
+            (STATE.reservations || []).filter(r => (r.courseId === c.id || r.CourseId === c.id) && (r.status === "accepted" || r.status === "pending" || r.status === "approved")).length;
+          const isFull = activeCount >= cap;
+          return `
+            <tr>
+              <td><b>${escapeHtml(c.title)}</b><div class="small-muted">${escapeHtml(c.description || "")}</div></td>
+              <td>${escapeHtml(nameOf(STATE.departments, c.departmentId))}</td>
+              <td>${escapeHtml(nameOf(STATE.buildings, c.buildingId))} · ${escapeHtml(nameOf(STATE.rooms, c.roomId))}</td>
+              <td>${fmtDate(c.date)}</td>
+              <td>
+                ${activeCount} / ${cap} seats
+                ${isFull ? '<span class="badge badge-rejected" style="margin-left:6px;">Course Full</span>' : '<span class="badge badge-approved" style="margin-left:6px; background:rgba(34,197,94,0.15); color:#4ADE80;">Open</span>'}
+              </td>
+              <td><div class="row-actions">
+                <button class="btn btn-gold btn-sm" onclick="openEnrollStudentModal(${c.id})">+ Enroll Student</button>
+                <button class="btn btn-outline btn-sm" onclick="openCourseForm(${c.id})">Edit</button>
+                <button class="btn btn-reject btn-sm" onclick="removeCourse(${c.id})">Delete</button>
+              </div></td>
+            </tr>
+          `;
+        }).join("")}
       </tbody>
     </table>
   `;
@@ -389,12 +409,13 @@ function openCourseForm(id) {
     return toast("Add a department, building and room first.");
   }
   const dateVal = c ? new Date(c.date).toISOString().slice(0, 16) : "";
+  const capVal = c ? (c.capacity || 30) : 30;
   openModal(
     c ? "Edit course" : "Add course",
-    "This is what trainees will see in the catalog.",
+    "Set course details and maximum seat capacity limit.",
     `
       <div class="field"><label>Title</label><input class="form-control" id="f-title" value="${c ? escapeHtml(c.title) : ""}" placeholder="e.g. Intro to React"></div>
-      <div class="field"><label>Description</label><textarea class="form-control" id="f-desc" rows="2" placeholder="What trainees will learn">${c ? escapeHtml(c.description) : ""}</textarea></div>
+      <div class="field"><label>Description</label><textarea class="form-control" id="f-desc" rows="2" placeholder="What trainees will learn">${c ? escapeHtml(c.description || "") : ""}</textarea></div>
       <div class="field-row">
         <div class="field"><label>Department</label>
           <select class="form-control" id="f-dept">
@@ -413,9 +434,12 @@ function openCourseForm(id) {
             ${STATE.rooms.map(r => `<option value="${r.id}" ${c && c.roomId === r.id ? "selected" : ""}>${escapeHtml(r.name)}</option>`).join("")}
           </select>
         </div>
-        <div class="field"><label>Date & time</label>
-          <input class="form-control" type="datetime-local" id="f-date" value="${dateVal}">
+        <div class="field"><label>Max Seat Limit (Capacity)</label>
+          <input class="form-control" type="number" min="1" id="f-capacity" value="${capVal}" placeholder="e.g. 30">
         </div>
+      </div>
+      <div class="field"><label>Date & time</label>
+        <input class="form-control" type="datetime-local" id="f-date" value="${dateVal}">
       </div>
       <div class="modal-actions">
         <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
@@ -426,6 +450,7 @@ function openCourseForm(id) {
   document.getElementById("saveBtn").onclick = async () => {
     const title = document.getElementById("f-title").value.trim();
     const date = document.getElementById("f-date").value;
+    const capacity = Number(document.getElementById("f-capacity").value || 30);
     if (!title) return toast("Title is required.");
     if (!date) return toast("Date & time is required.");
     const payload = {
@@ -434,6 +459,7 @@ function openCourseForm(id) {
       departmentId: Number(document.getElementById("f-dept").value),
       buildingId: Number(document.getElementById("f-building").value),
       roomId: Number(document.getElementById("f-room").value),
+      capacity: capacity > 0 ? capacity : 30,
       date: new Date(date).toISOString()
     };
     if (c) await API.updateCourse(c.id, payload);
@@ -441,6 +467,53 @@ function openCourseForm(id) {
     closeModal();
     await refreshAll();
     toast(c ? "Course updated." : "Course added.");
+  };
+}
+
+function openEnrollStudentModal(preselectCourseId = null, preselectUserId = null) {
+  const approvedStudents = (STATE.users || []).filter(u =>
+    (u.status === "Approved" || u.Status === "Approved" || !u.status) &&
+    (u.role !== "Admin" && u.Role !== "Admin")
+  );
+
+  if (!approvedStudents.length) return toast("No approved student accounts available.");
+  if (!STATE.courses.length) return toast("No courses available to enroll into.");
+
+  openModal(
+    "Enroll Student into Course",
+    "Directly register a student into a course session.",
+    `
+      <div class="field"><label>Select Student</label>
+        <select class="form-control" id="f-enroll-user">
+          ${approvedStudents.map(u => `<option value="${u.id}" ${preselectUserId === u.id ? "selected" : ""}>${escapeHtml(u.name)} (${escapeHtml(u.email || "")})</option>`).join("")}
+        </select>
+      </div>
+      <div class="field"><label>Select Course</label>
+        <select class="form-control" id="f-enroll-course">
+          ${STATE.courses.map(c => `<option value="${c.id}" ${preselectCourseId === c.id ? "selected" : ""}>${escapeHtml(c.title)} (${c.enrolledCount || 0}/${c.capacity || 30} seats)</option>`).join("")}
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-gold" id="enrollSubmitBtn">Confirm & Register</button>
+      </div>
+    `
+  );
+
+  document.getElementById("enrollSubmitBtn").onclick = async () => {
+    const userId = Number(document.getElementById("f-enroll-user").value);
+    const courseId = Number(document.getElementById("f-enroll-course").value);
+    const btn = document.getElementById("enrollSubmitBtn");
+    btn.disabled = true; btn.textContent = "Registering…";
+    try {
+      await API.createReservation({ userId, courseId, status: "accepted" });
+      closeModal();
+      await refreshAll();
+      toast("Student successfully enrolled in course.");
+    } catch (err) {
+      btn.disabled = false; btn.textContent = "Confirm & Register";
+      toast(err.message || "Failed to enroll student.");
+    }
   };
 }
 
@@ -534,22 +607,79 @@ function renderStudents() {
   wrap.innerHTML = `
     <div class="table-scroll">
     <table class="ledger">
-      <thead><tr><th>Name</th><th>Email</th><th></th></tr></thead>
+      <thead><tr><th>Name</th><th>Email</th><th>Assigned Courses</th><th></th></tr></thead>
       <tbody>
-        ${approvedStudents.map(u => `
-          <tr>
-            <td><b>${escapeHtml(u.name)}</b></td>
-            <td>${escapeHtml(u.email || "—")}</td>
-            <td><div class="row-actions">
-              <button class="btn btn-outline btn-sm" onclick="openStudentForm(${u.id})">Edit</button>
-              <button class="btn btn-reject btn-sm" onclick="removeStudent(${u.id})">Delete</button>
-            </div></td>
-          </tr>
-        `).join("")}
+        ${approvedStudents.map(u => {
+          const userRes = (STATE.reservations || []).filter(r => r.userId === u.id || r.UserId === u.id);
+          return `
+            <tr>
+              <td><b>${escapeHtml(u.name)}</b></td>
+              <td>${escapeHtml(u.email || "—")}</td>
+              <td>${userRes.length} course(s)</td>
+              <td><div class="row-actions">
+                <button class="btn btn-gold btn-sm" onclick="manageUserCourses(${u.id})">Manage Courses (${userRes.length})</button>
+                <button class="btn btn-outline btn-sm" onclick="openStudentForm(${u.id})">Edit</button>
+                <button class="btn btn-reject btn-sm" onclick="removeStudent(${u.id})">Delete</button>
+              </div></td>
+            </tr>
+          `;
+        }).join("")}
       </tbody>
     </table>
     </div>
   `;
+}
+
+function manageUserCourses(userId) {
+  const u = (STATE.users || []).find(x => x.id === userId);
+  if (!u) return;
+  const userRes = (STATE.reservations || []).filter(r => r.userId === userId || r.UserId === userId);
+
+  let contentHtml;
+  if (!userRes.length) {
+    contentHtml = `<p class="small-muted" style="margin-bottom:16px;">This student is not enrolled in any courses yet.</p>`;
+  } else {
+    contentHtml = `
+      <div style="max-height:240px; overflow-y:auto; margin-bottom:16px;">
+        <table class="ledger">
+          <thead><tr><th>Course Title</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${userRes.map(r => {
+              const c = (STATE.courses || []).find(course => course.id === r.courseId || course.Id === r.courseId);
+              return `
+                <tr>
+                  <td><b>${escapeHtml(c ? c.title : "Course removed")}</b></td>
+                  <td>${statusStamp(r.status)}</td>
+                  <td><button class="btn btn-reject btn-sm" onclick="adminRemoveUserCourse(${r.id}, ${userId})">Remove</button></td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  openModal(
+    `Manage Courses for ${escapeHtml(u.name)}`,
+    "View or remove course registrations, or assign a new course to this user.",
+    `
+      ${contentHtml}
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+        <button class="btn btn-gold" onclick="closeModal(); openEnrollStudentModal(null, ${userId});">+ Assign New Course</button>
+      </div>
+    `
+  );
+}
+
+async function adminRemoveUserCourse(resId, userId) {
+  confirmDelete("Remove course for this student?", "The student will be un-enrolled from this course.", async () => {
+    await API.deleteReservation(resId);
+    await refreshAll();
+    manageUserCourses(userId);
+    toast("Course removed for student.");
+  });
 }
 
 function openStudentForm(id, fromRequest) {

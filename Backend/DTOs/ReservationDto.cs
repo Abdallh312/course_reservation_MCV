@@ -25,6 +25,7 @@ namespace Backend.DTOs
     {
         public int UserId { get; set; }
         public int CourseId { get; set; }
+        public string? Status { get; set; }
     }
 
     // القيم المسموحة: pending / accepted / rejected

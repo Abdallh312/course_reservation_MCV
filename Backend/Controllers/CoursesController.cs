@@ -25,6 +25,8 @@ namespace Backend.Controllers
                 Title = course.Title,
                 Description = course.Description,
                 Date = course.Date,
+                Capacity = course.Capacity > 0 ? course.Capacity : 30,
+                EnrolledCount = course.Reservations?.Count(r => r.Status == "accepted" || r.Status == "pending") ?? 0,
                 DepartmentId = course.DepartmentId,
                 BuildingId = course.BuildingId,
                 RoomId = course.RoomId,
@@ -57,6 +59,7 @@ namespace Backend.Controllers
                 .Include(c => c.Department)
                 .Include(c => c.Building)
                 .Include(c => c.Room)
+                .Include(c => c.Reservations)
                 .ToListAsync();
 
             return courses.Select(MapToDto).ToList();
@@ -70,6 +73,7 @@ namespace Backend.Controllers
                 .Include(c => c.Department)
                 .Include(c => c.Building)
                 .Include(c => c.Room)
+                .Include(c => c.Reservations)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (course == null)
@@ -114,7 +118,8 @@ namespace Backend.Controllers
                 DepartmentId = dto.DepartmentId,
                 BuildingId = dto.BuildingId,
                 RoomId = dto.RoomId,
-                Date = dto.Date
+                Date = dto.Date,
+                Capacity = dto.Capacity > 0 ? dto.Capacity : 30
             };
 
             _context.Courses.Add(course);
@@ -131,7 +136,9 @@ namespace Backend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCourse(int id, [FromBody] UpdateCourseDto dto)
         {
-            var course = await _context.Courses.FindAsync(id);
+            var course = await _context.Courses
+                .Include(c => c.Reservations)
+                .FirstOrDefaultAsync(c => c.Id == id);
 
             if (course == null)
             {
@@ -177,6 +184,11 @@ namespace Backend.Controllers
             if (dto.Date != default)
             {
                 course.Date = dto.Date;
+            }
+
+            if (dto.Capacity > 0)
+            {
+                course.Capacity = dto.Capacity;
             }
 
             await _context.SaveChangesAsync();

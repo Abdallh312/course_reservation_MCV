@@ -84,10 +84,18 @@ namespace Backend.Controllers
                 return BadRequest(new { message = $"User with ID {dto.UserId} does not exist." });
             }
 
-            var courseExists = await _context.Courses.AnyAsync(c => c.Id == dto.CourseId);
-            if (!courseExists)
+            var course = await _context.Courses.FirstOrDefaultAsync(c => c.Id == dto.CourseId);
+            if (course == null)
             {
                 return BadRequest(new { message = $"Course with ID {dto.CourseId} does not exist." });
+            }
+
+            var activeCount = await _context.Reservations.CountAsync(r =>
+                r.CourseId == dto.CourseId && (r.Status == "accepted" || r.Status == "pending"));
+
+            if (course.Capacity > 0 && activeCount >= course.Capacity)
+            {
+                return BadRequest(new { message = $"This course is full ({activeCount}/{course.Capacity} seats filled)." });
             }
 
             var alreadyReserved = await _context.Reservations.AnyAsync(r =>
@@ -100,11 +108,13 @@ namespace Backend.Controllers
                 return BadRequest(new { message = "This user already has an active reservation for this course." });
             }
 
+            var targetStatus = string.IsNullOrWhiteSpace(dto.Status) ? "pending" : dto.Status.Trim().ToLower();
+
             var reservation = new Reservation
             {
                 UserId = dto.UserId,
                 CourseId = dto.CourseId,
-                Status = "pending",
+                Status = targetStatus,
                 RequestDate = DateTime.UtcNow
             };
 

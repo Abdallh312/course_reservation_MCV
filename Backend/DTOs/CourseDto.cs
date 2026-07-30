@@ -29,6 +29,8 @@ namespace Backend.DTOs
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         public DateTime Date { get; set; }
+        public int Capacity { get; set; } = 30;
+        public int EnrolledCount { get; set; }
 
         public int DepartmentId { get; set; }
         public int BuildingId { get; set; }
@@ -47,6 +49,7 @@ namespace Backend.DTOs
         public int BuildingId { get; set; }
         public int RoomId { get; set; }
         public DateTime Date { get; set; }
+        public int Capacity { get; set; } = 30;
     }
 
     public class UpdateCourseDto
@@ -57,5 +60,6 @@ namespace Backend.DTOs
         public int BuildingId { get; set; }
         public int RoomId { get; set; }
         public DateTime Date { get; set; }
+        public int Capacity { get; set; } = 30;
     }
 }
