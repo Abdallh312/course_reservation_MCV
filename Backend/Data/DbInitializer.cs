@@ -52,20 +52,35 @@ namespace Backend.Data
                 }
             }
 
-            // 4. Seed Users if empty
-            // (بيانات دخول تجريبية - يفضل تغييرها بعد أول تشغيل)
-            if (!context.Users.Any())
+            // 4. Ensure Admin User exists and credentials match "admin" / "admin 123"
+            var adminUser = context.Users.FirstOrDefault(u => 
+                u.Role == "Admin" || u.Name.ToLower() == "admin" || u.Email.ToLower() == "admin@example.com");
+
+            if (adminUser == null)
             {
-                var users = new List<User>
+                adminUser = new User
                 {
-                    new User
-                    {
-                        Name = "Admin",
-                        Email = "admin@example.com",
-                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
-                        Role = "Admin",
-                        Status = "Approved"
-                    },
+                    Name = "admin",
+                    Email = "admin@example.com",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin 123"),
+                    Role = "Admin",
+                    Status = "Approved"
+                };
+                context.Users.Add(adminUser);
+            }
+            else
+            {
+                adminUser.Name = "admin";
+                adminUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin 123");
+                adminUser.Role = "Admin";
+                adminUser.Status = "Approved";
+                context.Users.Update(adminUser);
+            }
+
+            if (!context.Users.Any(u => u.Role != "Admin"))
+            {
+                var defaultStudents = new List<User>
+                {
                     new User
                     {
                         Name = "student",
@@ -92,9 +107,10 @@ namespace Backend.Data
                     }
                 };
 
-                context.Users.AddRange(users);
-                context.SaveChanges();
+                context.Users.AddRange(defaultStudents);
             }
+
+            context.SaveChanges();
 
             // 5. Seed Courses if empty
             if (!context.Courses.Any())
