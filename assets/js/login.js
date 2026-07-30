@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (form) form.addEventListener("submit", handleLogin);
 
   const staffBtn = document.getElementById("demoStaffBtn");
-  if (staffBtn) staffBtn.addEventListener("click", () => fillDemo("admin", "admin123"));
+  if (staffBtn) staffBtn.addEventListener("click", () => fillDemo("admin", "admin 123"));
 
   const studentBtn = document.getElementById("demoStudentBtn");
   if (studentBtn) studentBtn.addEventListener("click", () => fillDemo("student@example.com", "student123"));

@@ -26,11 +26,38 @@ const SEED = {
     {
       id: 1,
       title: "ASP.NET Core Web API",
-      description: "Comprehensive course on REST APIs",
+      description: "Comprehensive course on REST APIs, Entity Framework Core, and JWT authentication.",
       departmentId: 1,
       buildingId: 1,
       roomId: 1,
       date: new Date(Date.now() + 7 * 86400000).toISOString()
+    },
+    {
+      id: 2,
+      title: "Full Stack Web Development",
+      description: "Master modern web development, UI design, state management, and cloud deployment.",
+      departmentId: 1,
+      buildingId: 1,
+      roomId: 2,
+      date: new Date(Date.now() + 14 * 86400000).toISOString()
+    },
+    {
+      id: 3,
+      title: "Database Systems & SQL Server",
+      description: "In-depth guide to relational database design, query tuning, and index optimization.",
+      departmentId: 3,
+      buildingId: 2,
+      roomId: 3,
+      date: new Date(Date.now() + 21 * 86400000).toISOString()
+    },
+    {
+      id: 4,
+      title: "Business Leadership & Finance",
+      description: "Strategic management principles, financial modeling, and team executive leadership.",
+      departmentId: 2,
+      buildingId: 1,
+      roomId: 1,
+      date: new Date(Date.now() + 28 * 86400000).toISOString()
     }
   ],
   users: [
@@ -39,11 +66,11 @@ const SEED = {
     { id: 3, name: "Ahmed (AhmedAMD3x3)", email: "amd3x3@gmail.com", password: "Ahmed123", role: "Student", status: "Approved" }
   ],
   admins: [
-    { id: 1, name: "Admin", username: "admin", email: "admin@example.com", password: "admin123", role: "Admin" }
+    { id: 1, name: "admin", username: "admin", email: "admin@example.com", password: "admin 123", role: "Admin" }
   ],
   accountRequests: [],
   reservations: [],
-  _nextId: { departments: 4, buildings: 3, rooms: 4, courses: 2, users: 4, reservations: 1, accountRequests: 1 }
+  _nextId: { departments: 4, buildings: 3, rooms: 4, courses: 5, users: 4, reservations: 1, accountRequests: 1 }
 };
 
 // In-memory fallback used only if localStorage is unavailable/blocked

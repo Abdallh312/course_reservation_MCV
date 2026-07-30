@@ -112,27 +112,71 @@ namespace Backend.Data
 
             context.SaveChanges();
 
-            // 5. Seed Courses if empty
-            if (!context.Courses.Any())
+            // 5. Seed Courses if empty or less than 2
+            if (context.Courses.Count() < 2)
             {
-                var firstDepartment = context.Departments.First();
-                var firstBuilding = context.Buildings.First();
-                var firstRoom = context.Rooms.First();
+                var depts = context.Departments.ToList();
+                var bldgs = context.Buildings.ToList();
+                var rms = context.Rooms.ToList();
+
+                var csDept = depts.FirstOrDefault(d => d.Name.Contains("Computer")) ?? depts.First();
+                var bizDept = depts.FirstOrDefault(d => d.Name.Contains("Business")) ?? depts.First();
+                var itDept = depts.FirstOrDefault(d => d.Name.Contains("Information")) ?? depts.First();
+
+                var bldgA = bldgs.First();
+                var bldgB = bldgs.Count > 1 ? bldgs[1] : bldgs.First();
+
+                var room1 = rms.First();
+                var room2 = rms.Count > 1 ? rms[1] : rms.First();
+                var room3 = rms.Count > 2 ? rms[2] : rms.First();
 
                 var courses = new List<Course>
                 {
                     new Course
                     {
                         Title = "ASP.NET Core Web API",
-                        Description = "Comprehensive course on REST APIs",
-                        DepartmentId = firstDepartment.Id,
-                        BuildingId = firstBuilding.Id,
-                        RoomId = firstRoom.Id,
+                        Description = "Comprehensive course on REST APIs, Entity Framework Core, and JWT authentication.",
+                        DepartmentId = csDept.Id,
+                        BuildingId = bldgA.Id,
+                        RoomId = room1.Id,
                         Date = DateTime.UtcNow.AddDays(7)
+                    },
+                    new Course
+                    {
+                        Title = "Full Stack Web Development",
+                        Description = "Master modern web development, UI design, state management, and cloud deployment.",
+                        DepartmentId = csDept.Id,
+                        BuildingId = bldgA.Id,
+                        RoomId = room2.Id,
+                        Date = DateTime.UtcNow.AddDays(14)
+                    },
+                    new Course
+                    {
+                        Title = "Database Systems & SQL Server",
+                        Description = "In-depth guide to relational database design, query tuning, and index optimization.",
+                        DepartmentId = itDept.Id,
+                        BuildingId = bldgB.Id,
+                        RoomId = room3.Id,
+                        Date = DateTime.UtcNow.AddDays(21)
+                    },
+                    new Course
+                    {
+                        Title = "Business Leadership & Finance",
+                        Description = "Strategic management principles, financial modeling, and team executive leadership.",
+                        DepartmentId = bizDept.Id,
+                        BuildingId = bldgA.Id,
+                        RoomId = room1.Id,
+                        Date = DateTime.UtcNow.AddDays(28)
                     }
                 };
 
-                context.Courses.AddRange(courses);
+                foreach (var c in courses)
+                {
+                    if (!context.Courses.Any(existing => existing.Title == c.Title))
+                    {
+                        context.Courses.Add(c);
+                    }
+                }
                 context.SaveChanges();
             }
         }
