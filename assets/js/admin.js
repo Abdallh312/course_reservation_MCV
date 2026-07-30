@@ -67,7 +67,7 @@ function updateStats() {
   if (statCourses) statCourses.textContent = STATE.courses.length;
   if (statReservations) statReservations.textContent = STATE.reservations.length;
   if (statPendingReqs) statPendingReqs.textContent = STATE.accountRequests.filter(r => r.status === "pending" || !r.status).length;
-  if (statStudents) statStudents.textContent = STATE.users.filter(u => u.role !== "Admin" && u.Role !== "Admin").length;
+  if (statStudents) statStudents.textContent = STATE.users.filter(u => (u.status === "Approved" || u.Status === "Approved" || !u.status) && u.role !== "Admin" && u.Role !== "Admin").length;
 }
 
 function bindNav() {
@@ -499,21 +499,35 @@ function renderAccountRequests() {
 
 function approveAccountRequest(id) {
   const req = STATE.accountRequests.find(r => r.id === id);
-  if (!req) return;
-  openStudentForm(null, req);
+  if (req) {
+    openStudentForm(null, req);
+  } else {
+    const u = STATE.users.find(user => user.id === id);
+    if (u) openStudentForm(null, u);
+  }
 }
 
 async function declineAccountRequest(id) {
   confirmDelete("Decline this request?", "The requester will not receive an account from it.", async () => {
-    await API.updateAccountRequestStatus(id, "declined");
-    await refreshAll();
-    toast("Request declined.");
+    try {
+      await API.updateAccountRequestStatus(id, "declined");
+      await refreshAll();
+      toast("Request declined.");
+    } catch (err) {
+      console.error("Failed to decline request:", err);
+      toast(err.message || "Failed to decline request.");
+    }
   });
 }
 
 function renderStudents() {
   const wrap = document.getElementById("studentsWrap");
-  if (!STATE.users.length) {
+  const approvedStudents = (STATE.users || []).filter(u =>
+    (u.status === "Approved" || u.Status === "Approved" || !u.status) &&
+    (u.role !== "Admin" && u.Role !== "Admin")
+  );
+
+  if (!approvedStudents.length) {
     wrap.innerHTML = emptyState("No student accounts yet", "Add one, or approve an account request above.");
     return;
   }
@@ -522,7 +536,7 @@ function renderStudents() {
     <table class="ledger">
       <thead><tr><th>Name</th><th>Email</th><th></th></tr></thead>
       <tbody>
-        ${STATE.users.map(u => `
+        ${approvedStudents.map(u => `
           <tr>
             <td><b>${escapeHtml(u.name)}</b></td>
             <td>${escapeHtml(u.email || "—")}</td>
@@ -561,24 +575,42 @@ function openStudentForm(id, fromRequest) {
     `
   );
   document.getElementById("saveBtn").onclick = async () => {
-    const name = document.getElementById("f-name").value.trim();
-    const email = document.getElementById("f-email").value.trim();
-    const password = document.getElementById("f-password").value;
-    if (!name) return toast("Name is required.");
-    if (!email) return toast("Email is required.");
-    if (!student && !password) return toast("Set a temporary password.");
+    try {
+      const name = document.getElementById("f-name").value.trim();
+      const email = document.getElementById("f-email").value.trim();
+      const password = document.getElementById("f-password").value;
+      if (!name) return toast("Name is required.");
+      if (!email) return toast("Email is required.");
+      if (!student && !fromRequest && !password) return toast("Set a temporary password.");
 
-    if (student) {
-      const payload = { name, email };
-      if (password) payload.password = password;
-      await API.updateUser(student.id, payload);
-    } else {
-      await API.createUser({ name, email, password });
-      if (fromRequest) await API.updateAccountRequestStatus(fromRequest.id, "approved");
+      if (student) {
+        const payload = { name, email };
+        if (password) payload.password = password;
+        await API.updateUser(student.id, payload);
+      } else if (fromRequest) {
+        const payload = { name, email };
+        if (password) payload.password = password;
+        let success = false;
+        try {
+          await API.updateUser(fromRequest.id, payload);
+          success = true;
+        } catch (e) {
+          console.warn("updateUser fallback", e);
+        }
+        if (!success) {
+          await API.updateAccountRequestStatus(fromRequest.id, "approved");
+        }
+      } else {
+        await API.createUser({ name, email, password });
+      }
+
+      closeModal();
+      await refreshAll();
+      toast(student ? "Account updated." : "Student account created & approved.");
+    } catch (err) {
+      console.error("Failed to save student account:", err);
+      toast(err.message || "Failed to save student account.");
     }
-    closeModal();
-    await refreshAll();
-    toast(student ? "Account updated." : "Student account created.");
   };
 }
 

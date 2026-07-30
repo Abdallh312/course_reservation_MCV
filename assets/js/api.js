@@ -316,11 +316,28 @@ function mockApiHandler(endpoint, options = {}) {
   }
 
   // GET /users
-  if (endpoint === "/users" && method === "GET") {
-    return db.users || [];
+  if (endpoint.startsWith("/users") && method === "GET" && !endpoint.includes("/pending") && !endpoint.includes("/reservations")) {
+    let status = "Approved";
+    if (endpoint.includes("?")) {
+      const q = endpoint.split("?")[1];
+      const params = new URLSearchParams(q);
+      if (params.has("status")) status = params.get("status");
+    }
+    let res = db.users || [];
+    if (status) res = res.filter(u => (u.status || u.Status || "Approved").toLowerCase() === status.toLowerCase());
+    return res;
   }
   // POST /users/add-student
   if (endpoint === "/users/add-student" && method === "POST") {
+    const norm = (body.email || "").trim().toLowerCase();
+    let existingUser = db.users ? db.users.find(u => (u.email || "").toLowerCase() === norm) : null;
+    if (existingUser) {
+      existingUser.name = body.name || existingUser.name;
+      existingUser.password = body.password || existingUser.password;
+      existingUser.status = "Approved";
+      saveDB(db);
+      return existingUser;
+    }
     const item = {
       id: nextId(db, "users"),
       name: body.name,
@@ -329,6 +346,7 @@ function mockApiHandler(endpoint, options = {}) {
       role: "Student",
       status: "Approved"
     };
+    if (!db.users) db.users = [];
     db.users.push(item);
     saveDB(db);
     return item;
@@ -481,8 +499,9 @@ const API = {
   },
 
   // ---------- Users / Student accounts ----------
-  async getUsers() {
-    return await request("/users");
+  async getUsers(status = "Approved") {
+    const url = status ? `/users?status=${encodeURIComponent(status)}` : "/users";
+    return await request(url);
   },
   async createUser(payload) {
     return await request("/users/add-student", {

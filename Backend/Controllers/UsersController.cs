@@ -39,12 +39,23 @@ namespace Backend.Controllers
 
         // ============================================================
         // GET: api/users
-        // عرض جميع المستخدمين (لـ Admin أو التطبيق)
+        // عرض المستخدمين المفعلين فقط بشكل افتراضي (أو حسب الحالة)
         // ============================================================
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers([FromQuery] string? status)
         {
-            var users = await _context.Users.ToListAsync();
+            var query = _context.Users.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                query = query.Where(u => u.Status.ToLower() == status.Trim().ToLower());
+            }
+            else
+            {
+                query = query.Where(u => u.Status == "Approved");
+            }
+
+            var users = await query.ToListAsync();
             return users.Select(MapToDto).ToList();
         }
 
@@ -167,13 +178,25 @@ namespace Backend.Controllers
 
             if (!string.IsNullOrWhiteSpace(dto.Email))
             {
-                user.Email = dto.Email.Trim().ToLowerInvariant();
+                var newEmail = dto.Email.Trim().ToLowerInvariant();
+                if (newEmail != user.Email.ToLower())
+                {
+                    var emailExists = await _context.Users.AnyAsync(u => u.Id != id && u.Email.ToLower() == newEmail);
+                    if (emailExists)
+                    {
+                        return BadRequest(new { message = "Another user with this email already exists." });
+                    }
+                    user.Email = newEmail;
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(dto.Password))
             {
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             }
+
+            // Set status to Approved when admin approves/updates credentials
+            user.Status = "Approved";
 
             await _context.SaveChangesAsync();
             return Ok(MapToDto(user));
@@ -250,10 +273,19 @@ namespace Backend.Controllers
 
             var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
 
-            var emailExists = await _context.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail);
-            if (emailExists)
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+            if (existingUser != null)
             {
-                return BadRequest(new { message = "A user with this email already exists." });
+                if (existingUser.Status == "Pending" || existingUser.Status == "Rejected")
+                {
+                    existingUser.Name = dto.Name.Trim();
+                    existingUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                    existingUser.Status = "Approved";
+                    await _context.SaveChangesAsync();
+                    return Ok(MapToDto(existingUser));
+                }
+
+                return BadRequest(new { message = "An approved user with this email already exists." });
             }
 
             var user = new User
