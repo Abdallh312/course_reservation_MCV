@@ -43,13 +43,19 @@ async function init() {
     ]);
     STATE = { departments, buildings, rooms, courses, reservations, users };
 
-    const me = users.find(u => u.id === currentUserId);
-    document.getElementById("currentUserTag").textContent = me ? me.name : "User";
+    const me = (users || []).find(u => u.id === currentUserId || u.Id === currentUserId);
+    const userTag = document.getElementById("currentUserTag");
+    if (userTag) userTag.textContent = me ? `${me.name || me.Name} (Student)` : "Student Portal";
 
     renderDeptFilter();
     renderCourses();
     renderLearningList();
-    document.getElementById("deptFilter").addEventListener("change", renderCourses);
+
+    const deptFilter = document.getElementById("deptFilter");
+    if (deptFilter) deptFilter.addEventListener("change", renderCourses);
+
+    const searchInput = document.getElementById("courseSearchInput");
+    if (searchInput) searchInput.addEventListener("input", renderCourses);
   } catch (e) {
     console.error("Failed to load data:", e);
     toast("Something went wrong loading data — check the console.");
@@ -70,6 +76,8 @@ function bindNav() {
 
 function renderDeptFilter() {
   const sel = document.getElementById("deptFilter");
+  if (!sel) return;
+  sel.innerHTML = '<option value="">All departments</option>';
   STATE.departments.forEach(d => {
     const opt = document.createElement("option");
     opt.value = d.id; opt.textContent = d.name;
@@ -77,25 +85,28 @@ function renderDeptFilter() {
   });
 }
 
-function lookupName(list, id) {
-  const item = list.find(x => x.id === id);
-  return item ? item.name : "—";
-}
-
 function myReservationFor(courseId) {
-  return STATE.reservations.find(r => r.courseId === courseId);
+  return STATE.reservations.find(r => r.courseId === courseId || r.CourseId === courseId);
 }
 
 function renderCourses() {
-  const deptVal = document.getElementById("deptFilter").value;
+  const deptVal = document.getElementById("deptFilter") ? document.getElementById("deptFilter").value : "";
+  const query = document.getElementById("courseSearchInput") ? document.getElementById("courseSearchInput").value.trim().toLowerCase() : "";
   const grid = document.getElementById("courseGrid");
-  const list = STATE.courses.filter(c => !deptVal || c.departmentId === Number(deptVal));
+  if (!grid) return;
+
+  const list = STATE.courses.filter(c => {
+    const matchesDept = !deptVal || c.departmentId === Number(deptVal);
+    const titleMatch = (c.title || "").toLowerCase().includes(query);
+    const descMatch = (c.description || "").toLowerCase().includes(query);
+    return matchesDept && (titleMatch || descMatch);
+  });
 
   if (!list.length) {
     grid.innerHTML = `<div class="empty" style="grid-column:1/-1;">
-      <div class="glyph">∅</div>
-      <h3>No courses in this department</h3>
-      <p>Try a different filter, or check back after the admin adds new courses.</p>
+      <div class="glyph">🔍</div>
+      <h3>No courses found</h3>
+      <p>Try adjusting your search query or department filter.</p>
     </div>`;
     return;
   }
@@ -111,7 +122,7 @@ function renderCourses() {
       actionHtml = `<button class="btn btn-gold btn-sm" onclick="reserveCourse(${c.id})">Reserve seat</button>`;
     } else if (existing.status === "pending") {
       actionHtml = statusStamp("pending");
-    } else if (existing.status === "accepted") {
+    } else if (existing.status === "accepted" || existing.status === "approved") {
       actionHtml = statusStamp("accepted");
     } else {
       actionHtml = statusStamp("rejected");
@@ -122,10 +133,10 @@ function renderCourses() {
         <div class="ticket-body">
           <span class="dept">${escapeHtml(dept ? dept.name : "General")}</span>
           <h3>${escapeHtml(c.title)}</h3>
-          <p class="desc">${escapeHtml(c.description)}</p>
+          <p class="desc">${escapeHtml(c.description || "No description provided.")}</p>
           <div class="meta">
-            <span><b>When:</b> ${fmtDate(c.date)}</span>
-            <span><b>Where:</b> ${escapeHtml(building ? building.name : "—")} · ${escapeHtml(room ? room.name : "—")}</span>
+            <span><b>Session Date:</b> ${fmtDate(c.date)}</span>
+            <span><b>Location:</b> ${escapeHtml(building ? building.name : "Main Campus")} · ${escapeHtml(room ? room.name : "Room")}</span>
           </div>
         </div>
         <div class="ticket-stub">
@@ -141,8 +152,8 @@ async function reserveCourse(courseId) {
   const currentUserId = getCurrentUserId();
   const course = STATE.courses.find(c => c.id === courseId);
   openModal(
-    "Reserve this course?",
-    `Your request for "${escapeHtml(course.title)}" will be sent to the admin and marked as pending.`,
+    "Confirm Course Reservation",
+    `Would you like to reserve a seat for "${escapeHtml(course.title)}"?`,
     `<div class="modal-actions">
        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
        <button class="btn btn-gold" id="confirmReserveBtn">Confirm reservation</button>
@@ -167,11 +178,13 @@ async function reserveCourse(courseId) {
 
 function renderLearningList() {
   const wrap = document.getElementById("learningListWrap");
+  if (!wrap) return;
+
   if (!STATE.reservations.length) {
     wrap.innerHTML = `<div class="empty">
-      <div class="glyph">☐</div>
+      <div class="glyph">📚</div>
       <h3>Your learning list is empty</h3>
-      <p>Reserve a course from the catalog to see it show up here.</p>
+      <p>Reserve a course from the catalog to track it here.</p>
     </div>`;
     return;
   }

@@ -4,44 +4,53 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login — Course Reservation System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
 <style>
-  .login-card{
-    background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.14);
-    border-radius:14px;
-    padding:28px 26px 24px;
-    max-width:400px;
-    width:100%;
-    margin:0 auto;
-    text-align:left;
+  .login-card {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 20px;
+    padding: 34px 30px 28px;
+    max-width: 420px;
+    width: 100%;
+    margin: 0 auto;
+    text-align: left;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35);
   }
-  .login-card .field label{ color:#E7E1FA; }
-  .login-card .form-control{
-    background:rgba(255,255,255,0.08);
-    border:1px solid rgba(255,255,255,0.18);
-    color:#fff;
+  .login-card .field label { color: #E2E8F0; }
+  .login-card .form-control {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #FFFFFF;
+    border-radius: 10px;
+    padding: 12px 14px;
   }
-  .login-card .form-control::placeholder{ color:#B7ADDD; }
-  .login-card .form-control:focus{
-    border-color:var(--accent);
-    box-shadow:0 0 0 3px rgba(249,115,22,0.25);
+  .login-card .form-control::placeholder { color: #94A3B8; }
+  .login-card .form-control:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.28);
+    background: rgba(255, 255, 255, 0.12);
   }
-  .login-error{
-    display:none;
-    background:rgba(239,68,68,0.15);
-    border:1px solid rgba(239,68,68,0.4);
-    color:#FFD9D6;
-    font-size:0.82rem;
-    padding:9px 12px;
-    border-radius:8px;
-    margin-bottom:14px;
+  .login-error {
+    display: none;
+    background: rgba(239, 68, 68, 0.18);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #FEE2E2;
+    font-size: 0.86rem;
+    padding: 11px 14px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    font-weight: 500;
   }
-  .login-error.show{ display:block; }
-  .login-submit{ width:100%; justify-content:center; margin-top:4px; }
-  .login-footer{ margin-top:18px; text-align:center; }
-  .login-back{ margin-top:10px; text-align:center; }
-  .login-back p{ color:#8F84BE; font-size:0.74rem; margin-top:6px; }
+  .login-error.show { display: block; }
+  .login-submit { width: 100%; justify-content: center; margin-top: 6px; padding: 12px; font-size: 0.95rem; }
+  .login-footer { margin-top: 22px; text-align: center; }
+  .login-back { margin-top: 24px; text-align: center; }
+  .login-back p { color: #94A3B8; font-size: 0.82rem; margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -49,7 +58,7 @@
 <div class="landing">
   <div class="landing-wrap">
     <span class="eyebrow">Course Reservation System</span>
-    <h1>Welcome back. <span class="accent">Sign in</span> to continue.</h1>
+    <h1>Welcome back. <span style="color:var(--accent);">Sign in</span> to continue.</h1>
     <p class="lead">Students and staff both sign in here — you'll land on the right dashboard automatically.</p>
 
     <div class="login-card">
@@ -58,13 +67,13 @@
       <form id="loginForm">
         <div class="field">
           <label for="loginEmail">Username or Email</label>
-          <input class="form-control" type="text" id="loginEmail" placeholder="you@example.com" autocomplete="username">
+          <input class="form-control" type="text" id="loginEmail" placeholder="admin or student@example.com" autocomplete="username">
         </div>
         <div class="field">
           <label for="loginPassword">Password</label>
           <input class="form-control" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
         </div>
-        <button type="submit" class="btn btn-gold login-submit" id="loginSubmitBtn">Login</button>
+        <button type="submit" class="btn btn-gold login-submit" id="loginSubmitBtn">Sign in &rarr;</button>
       </form>
 
       <div class="login-footer">
@@ -73,8 +82,11 @@
     </div>
 
     <div class="login-back">
-      <p>Demo staff login: <b>admin</b> / <b>admin123</b></p>
-      <p>Demo student login: <b>student@example.com</b> / <b>student123</b></p>
+      <p>Quick Demo Credentials (click to autofill):</p>
+      <div class="demo-chip-box">
+        <button type="button" class="demo-chip-btn" id="demoStaffBtn">⚡ Staff: admin / admin123</button>
+        <button type="button" class="demo-chip-btn" id="demoStudentBtn">⚡ Student: student@example.com / student123</button>
+      </div>
     </div>
   </div>
 </div>

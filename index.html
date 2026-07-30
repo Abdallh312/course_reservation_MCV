@@ -3,78 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login — Course Reservation System</title>
+<title>Course Reservation System — Modern University Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
-<style>
-  .login-card{
-    background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.14);
-    border-radius:14px;
-    padding:28px 26px 24px;
-    max-width:400px;
-    width:100%;
-    margin:0 auto;
-    text-align:left;
-  }
-  .login-card .field label{ color:#E7E1FA; }
-  .login-card .form-control{
-    background:rgba(255,255,255,0.08);
-    border:1px solid rgba(255,255,255,0.18);
-    color:#fff;
-  }
-  .login-card .form-control::placeholder{ color:#B7ADDD; }
-  .login-card .form-control:focus{
-    border-color:var(--accent);
-    box-shadow:0 0 0 3px rgba(249,115,22,0.25);
-  }
-  .login-error{
-    display:none;
-    background:rgba(239,68,68,0.15);
-    border:1px solid rgba(239,68,68,0.4);
-    color:#FFD9D6;
-    font-size:0.82rem;
-    padding:9px 12px;
-    border-radius:8px;
-    margin-bottom:14px;
-  }
-  .login-error.show{ display:block; }
-  .login-submit{ width:100%; justify-content:center; margin-top:4px; }
-  .login-footer{ margin-top:18px; text-align:center; }
-  .login-back{ margin-top:10px; text-align:center; }
-  .login-back p{ color:#8F84BE; font-size:0.74rem; margin-top:6px; }
-</style>
 </head>
 <body>
 
 <div class="landing">
   <div class="landing-wrap">
-    <span class="eyebrow">Course Reservation System</span>
-    <h1>Welcome back. <span class="accent">Sign in</span> to continue.</h1>
-    <p class="lead">Students and staff both sign in here — you'll land on the right dashboard automatically.</p>
+    <span class="eyebrow">Academic Course Reservation Portal</span>
+    <h1>Streamlined Course Registration &amp; Room Booking</h1>
+    <p class="lead">Select your portal to browse upcoming courses, reserve seats, or manage university schedules and departments.</p>
 
-    <div class="login-card">
-      <div id="loginError" class="login-error"></div>
+    <div class="role-cards">
+      <a href="login.html" class="role-card">
+        <span class="tag">Student Portal</span>
+        <h2>Student Sign In &rarr;</h2>
+        <p>Explore available courses, filter by department, request reservations, and track your learning status.</p>
+      </a>
 
-      <form id="loginForm">
-        <div class="field">
-          <label for="loginEmail">Username or Email</label>
-          <input class="form-control" type="text" id="loginEmail" placeholder="you@example.com" autocomplete="username">
-        </div>
-        <div class="field">
-          <label for="loginPassword">Password</label>
-          <input class="form-control" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
-        </div>
-        <button type="submit" class="btn btn-gold login-submit" id="loginSubmitBtn">Login</button>
-      </form>
-
-      <div class="login-footer">
-        <button class="request-account-btn" id="requestAccountBtn">Don't have an account? Request one &rarr;</button>
-      </div>
+      <a href="login.html" class="role-card">
+        <span class="tag">Administration</span>
+        <h2>Staff &amp; Admin Sign In &rarr;</h2>
+        <p>Manage departments, campus buildings, lecture rooms, approve student registrations and course requests.</p>
+      </a>
     </div>
 
-    <div class="login-back">
-      <p>Demo staff login: <b>admin</b> / <b>admin123</b></p>
-      <p>Demo student login: <b>student@example.com</b> / <b>student123</b></p>
+    <div class="landing-footer">
+      <button class="request-account-btn" id="requestAccountBtn">✨ Don't have a student account? Request one here &rarr;</button>
     </div>
   </div>
 </div>
@@ -83,6 +41,5 @@
 <script src="assets/js/api.js"></script>
 <script src="assets/js/ui.js"></script>
 <script src="assets/js/landing.js"></script>
-<script src="assets/js/login.js"></script>
 </body>
 </html>

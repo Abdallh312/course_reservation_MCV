@@ -48,13 +48,26 @@ async function refreshAll() {
     API.getDepartments(), API.getBuildings(), API.getRooms(), API.getCourses(),
     API.getReservations(), API.getUsers(), API.getAccountRequests()
   ]);
-  STATE = { departments, buildings, rooms, courses, reservations, users, accountRequests };
+  STATE = { departments: departments || [], buildings: buildings || [], rooms: rooms || [], courses: courses || [], reservations: reservations || [], users: users || [], accountRequests: accountRequests || [] };
+  updateStats();
   renderReservations();
   renderDepartments();
   renderBuildings();
   renderRooms();
   renderCourses();
   renderAccounts();
+}
+
+function updateStats() {
+  const statCourses = document.getElementById("statCourses");
+  const statReservations = document.getElementById("statReservations");
+  const statPendingReqs = document.getElementById("statPendingReqs");
+  const statStudents = document.getElementById("statStudents");
+
+  if (statCourses) statCourses.textContent = STATE.courses.length;
+  if (statReservations) statReservations.textContent = STATE.reservations.length;
+  if (statPendingReqs) statPendingReqs.textContent = STATE.accountRequests.filter(r => r.status === "pending" || !r.status).length;
+  if (statStudents) statStudents.textContent = STATE.users.filter(u => u.role !== "Admin" && u.Role !== "Admin").length;
 }
 
 function bindNav() {

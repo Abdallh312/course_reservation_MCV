@@ -10,9 +10,23 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Add DbContext with SQLite Database
+// 1. Add DbContext with SQLite or SQL Server Database based on configuration
+var dbProvider = builder.Configuration["DatabaseProvider"] ?? "Sqlite";
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=app.db"));
+{
+    if (dbProvider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
+    {
+        var sqlServerConn = builder.Configuration.GetConnectionString("SqlServerConnection")
+            ?? "Server=(localdb)\\mssqllocaldb;Database=CourseReservationDb;Trusted_Connection=True;TrustServerCertificate=True";
+        options.UseSqlServer(sqlServerConn);
+    }
+    else
+    {
+        var sqliteConn = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=app.db";
+        options.UseSqlite(sqliteConn);
+    }
+});
 
 // 2. Add CORS policy
 builder.Services.AddCors(options =>

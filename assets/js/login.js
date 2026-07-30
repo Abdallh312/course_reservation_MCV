@@ -1,5 +1,5 @@
 /* ============================================================
-   login.js — handles sign-in on login.html via .NET Backend API.
+   login.js — handles sign-in on login.html via .NET Backend API / Fallback.
    ============================================================ */
 
 const LOGGED_IN_USER_KEY = "crs_current_user_id";
@@ -16,6 +16,17 @@ function hideLoginError() {
   const el = document.getElementById("loginError");
   if (!el) return;
   el.classList.remove("show");
+}
+
+function fillDemo(username, password) {
+  const emailInput = document.getElementById("loginEmail");
+  const passInput = document.getElementById("loginPassword");
+  if (emailInput && passInput) {
+    emailInput.value = username;
+    passInput.value = password;
+    hideLoginError();
+    emailInput.focus();
+  }
 }
 
 async function handleLogin(e) {
@@ -53,16 +64,22 @@ async function handleLogin(e) {
 
     showLoginError("Incorrect username/email or password.");
     btn.disabled = false;
-    btn.textContent = "Login";
+    btn.textContent = "Sign in →";
   } catch (err) {
     console.error("Login failed:", err);
     showLoginError(err.message || "Something went wrong — please try again.");
     btn.disabled = false;
-    btn.textContent = "Login";
+    btn.textContent = "Sign in →";
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("loginForm");
   if (form) form.addEventListener("submit", handleLogin);
+
+  const staffBtn = document.getElementById("demoStaffBtn");
+  if (staffBtn) staffBtn.addEventListener("click", () => fillDemo("admin", "admin123"));
+
+  const studentBtn = document.getElementById("demoStudentBtn");
+  if (studentBtn) studentBtn.addEventListener("click", () => fillDemo("student@example.com", "student123"));
 });
