@@ -14,6 +14,26 @@ namespace Backend.Data
             // Ensure Database schema is created
             context.Database.EnsureCreated();
 
+            // Ensure Capacity column exists in Courses table for existing databases
+            try
+            {
+                context.Database.ExecuteSqlRaw(@"
+                    IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Courses') 
+                    AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Courses') AND name = 'Capacity')
+                    BEGIN
+                        ALTER TABLE Courses ADD Capacity INT NOT NULL DEFAULT 30;
+                    END
+                ");
+            }
+            catch
+            {
+                try
+                {
+                    context.Database.ExecuteSqlRaw("ALTER TABLE Courses ADD COLUMN Capacity INTEGER NOT NULL DEFAULT 30;");
+                }
+                catch { }
+            }
+
             // 1. Seed Departments if empty
             if (!context.Departments.Any())
             {

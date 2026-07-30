@@ -72,10 +72,15 @@ BEGIN
         BuildingId INT NOT NULL,
         RoomId INT NOT NULL,
         Date DATETIME2 NOT NULL,
+        Capacity INT NOT NULL DEFAULT 30,
         CONSTRAINT FK_Courses_Departments FOREIGN KEY (DepartmentId) REFERENCES Departments(Id) ON DELETE CASCADE,
         CONSTRAINT FK_Courses_Buildings FOREIGN KEY (BuildingId) REFERENCES Buildings(Id),
         CONSTRAINT FK_Courses_Rooms FOREIGN KEY (RoomId) REFERENCES Rooms(Id)
     );
+END
+ELSE IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Courses') AND name = 'Capacity')
+BEGIN
+    ALTER TABLE Courses ADD Capacity INT NOT NULL DEFAULT 30;
 END
 GO
 
